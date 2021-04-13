@@ -45,10 +45,12 @@ def calcEuclidianDistance(pointOne, pointTwo):
         soma += math.pow(float(pointOne[i]) - float(pointTwo[i]), 2)
     return math.sqrt(soma)
 
+# Método para selecionar os primeiros centroids aleatoriamente
 def selectFirstCentroids(data, numberCluster):
-    dataLength = data.__len__()
+    dataLength = len(data)
     return random.choices(data, k=numberCluster)
 
+# Método para realocar os dados em cada cluster.
 def recalculateClusters(dataSet, centroids, numberCluster):
     # Inicia os clusters como vazio.
     clusters = {}
@@ -69,35 +71,54 @@ def recalculateClusters(dataSet, centroids, numberCluster):
         clusters[index].append(data)
     return clusters
 
+# Método para recalcular os centroides.
 def recalculateCentroids(clusters, numberCluster):
     centroids = []
     for i in range(numberCluster):
         centroids.append(numpy.average(clusters[i], axis=0))
     return centroids
 
+# Método para o calculo de K-Means.
 def kMeans(data, numberCluster):
+    # Variável de controle do loop.
     count = 0
+
+    # É realizado a seleção dos primeiros centroides.
     centroids = selectFirstCentroids(data, numberCluster)
+
+    # Esta variável é utilizada para o controle em que é necessário saber os centroides antigos e os novos
     newCentroids = []
+    # Variável de controle.
     flag = True
+    # Enquanto o controle for verdadeiro:
     while flag:
+        # Realoca os dados nos clusters.
         clusters = recalculateClusters(data, centroids, numberCluster)
+        # Seleciona novos centroides.
         newCentroids = recalculateCentroids(clusters, numberCluster)
+        # Verifica se o algoritmo ainda deve continuar rodando.
         flag = verifyCondition(count, centroids, newCentroids, numberCluster)
+        # Salva os dados dos novos centroids para proximas operações.
         centroids = newCentroids
+        # Atualiza o contador.
         count = count + 1
     return clusters
 
-
+# Método para verificar se o código ainda deve continuar rodando
 def verifyCondition(count, oldCentroid, newCentroid, numberCluster):
     hasChange = False
+    # Se o contador for maior que 100 ele retorna false.
     if(count >= 100):
         return False
+    # Para cada centroide:
     for i in range(numberCluster):
+        # É realizado a subtração entre o centroide antigo e o novo calculado.
         result = numpy.diff([newCentroid[i], oldCentroid[i]], axis=0)
         soma = numpy.sum(result[0])
+        # Se o resultado for 0, ou seja não houve auteração, a flag de mudança é alterada
         if(soma != 0):
             hasChange = True
+    # Se houve mudança de centroide retorna false
     if(hasChange):
         return False
     return True
@@ -114,6 +135,7 @@ if __name__ == "__main__":
         [sg.Button('Sim'), sg.Button('Nao')]
     ]
 
+    # Layout da tela de quantos grupos devem existir.
     layoutNumeroCetroides = [
         [sg.Text('Quantos centróides você deseja?')],
         [sg.Input()],
@@ -121,17 +143,19 @@ if __name__ == "__main__":
     ]
 
     # Inicio da tela
-    #window = sg.Window(title, layoutPossuiClasse, element_justification='center')
+    window = sg.Window(title, layoutPossuiClasse, element_justification='center')
     # Captura de evento e valores.
-    #event, values = window.read()
+    event, values = window.read()
     # Tela para informar se os dados possuem classe.
-    #hasClass = event
+    hasClass = event
     
-    #if hasClass == 'Sim':
-    #    removeClass(data)
-    data = []
-    for dado in dataWithClass:
-        data.append(dado.copy())
+
+    if hasClass == 'Sim':
+        # For para no output aparecer com as respectivas classes, se houver.
+        data = []
+        for dado in dataWithClass:
+            data.append(dado.copy())
+        removeClass(data)
     removeClass(data)
     data = formatarCampo(data)
 
@@ -141,6 +165,7 @@ if __name__ == "__main__":
     qtdeGrupos = int(values[0])
     
     clusters = kMeans(data, qtdeGrupos)
+    # For para adicionar os respectivos cluster em cada dado.
     for i in range(len(dataWithClass)):
         for j in range(len(clusters)):
             if(data[i] in clusters[j]):
@@ -148,4 +173,4 @@ if __name__ == "__main__":
 
     writeCsvFile(dataWithClass)
     # Pop-up de conclusao.
-    sg.popup('Arquivo de Matriz de Distancia Euclidiana gerado com sucesso!')
+    sg.popup('Arquivo de output gerado com sucesso!')
